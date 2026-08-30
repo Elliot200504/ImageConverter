@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Image Converter</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --border: #dfe3e8;
+      --text: #1b1f24;
+      --muted: #6b7280;
+      --accent: #2f6feb;
+      --accent-light: #e8f0fe;
+      --green: #1a7f4b;
+      --red: #b42318;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14171c;
+        --panel: #1c2027;
+        --border: #2e343d;
+        --text: #e7eaee;
+        --muted: #9aa3af;
+        --accent: #5b8df6;
+        --accent-light: #22304d;
+        --green: #4ade80;
+        --red: #f87171;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 20px 64px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
+    }
+
+    .intro {
+      margin: 0 0 24px;
+      color: var(--muted);
+    }
+
+    .box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    #drop {
+      display: block;
+      padding: 40px 20px;
+      border: 2px dashed var(--border);
+      text-align: center;
+      cursor: pointer;
+    }
+
+    #drop:hover,
+    #drop.hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    #drop strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 17px;
+    }
+
+    #drop small {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+      padding: 16px;
+    }
+
+    .setting label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .setting select,
+    .setting input[type=number] {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font: inherit;
+    }
+
+    .setting input[type=range] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .setting.checkbox {
+      display: flex;
+      align-items: center;
+      align-self: end;
+      gap: 8px;
+      padding-bottom: 8px;
+    }
+
+    .setting.checkbox input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+    }
+
+    .setting.checkbox label {
+      margin: 0;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: none;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    button {
+      padding: 9px 16px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.blue {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #clearButton {
+      margin-left: auto;
+    }
+
+    #list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    #list li {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+    }
+
+    .thumbnail {
+      flex: none;
+      width: 48px;
+      height: 48px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .filename {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status.done {
+      color: var(--green);
+    }
+
+    .status.failed {
+      color: var(--red);
+    }
+
+    .download {
+      padding: 7px 12px;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    footer {
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    code {
+      padding: 1px 5px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>Image Converter</h1>
+    <p class="intro">
+      PNG, JPEG, WebP, AVIF, TIFF and GIF — converted on your own computer.
+      Nothing is uploaded anywhere.
+    </p>
+
+    <label id="drop" class="box" for="picker" tabindex="0">
+      <strong>Drop images here</strong>
+      <small>or click to pick them — you can take several at once</small>
+    </label>
+    <input id="picker" type="file" accept="image/*,.heic,.heif,.jp2" multiple hidden>
+
+    <div class="box settings">
+      <div class="setting">
+        <label for="format">Convert to</label>
+        <select id="format">
+          <option value="webp">WebP</option>
+          <option value="png">PNG</option>
+          <option value="jpeg">JPEG</option>
+          <option value="avif">AVIF</option>
+          <option value="tiff">TIFF</option>
+          <option value="gif">GIF</option>
+        </select>
+      </div>
+
+      <div class="setting">
+        <label for="quality">Quality <span id="qualityValue">80</span></label>
+        <input id="quality" type="range" min="1" max="100" value="80">
+      </div>
+
+      <div class="setting">
+        <label for="width">Max width (px)</label>
+        <input id="width" type="number" min="1" placeholder="original">
+      </div>
+
+      <div class="setting">
+        <label for="height">Max height (px)</label>
+        <input id="height" type="number" min="1" placeholder="original">
+      </div>
+
+      <div class="setting checkbox">
+        <input id="animation" type="checkbox" checked>
+        <label for="animation">Keep animation</label>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button id="convertButton" class="blue" disabled>Convert</button>
+      <button id="downloadButton" disabled>Download all</button>
+      <button id="clearButton" disabled>Clear</button>
+    </div>
+
+    <ul id="list"></ul>
+
+    <footer>
+      You can do the same thing in the terminal:
+      <code>node convert.js photo.png --to webp</code>
+    </footer>
+  </main>
+
+  <script>
+    // Every picture you drop in ends up in this array. When something changes I
+    // just draw the whole list again, it is easier than updating one row.
+    let items = [];
+
+    const drop = document.getElementById('drop');
+    const picker = document.getElementById('picker');
+    const list = document.getElementById('list');
+
+    const formatSelect = document.getElementById('format');
+    const quality = document.getElementById('quality');
+    const qualityValue = document.getElementById('qualityValue');
+    const width = document.getElementById('width');
+    const height = document.getElementById('height');
+    const animation = document.getElementById('animation');
+
+    const convertButton = document.getElementById('convertButton');
+    const downloadButton = document.getElementById('downloadButton');
+    const clearButton = document.getElementById('clearButton');
+
+    function humanSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function makeRow(item) {
+      const row = document.createElement('li');
+      row.className = 'box';
+
+      const thumbnail = document.createElement('img');
+      thumbnail.className = 'thumbnail';
+      thumbnail.src = item.preview;
+      thumbnail.alt = '';
+
+      const filename = document.createElement('div');
+      filename.className = 'filename';
+      filename.textContent = item.file.name;
+
+      const status = document.createElement('div');
+      status.className = 'status';
+      if (item.status === 'done') status.classList.add('done');
+      if (item.status === 'failed') status.classList.add('failed');
+      status.textContent = item.message;
+
+      const text = document.createElement('div');
+      text.className = 'text';
+      text.append(filename, status);
+
+      row.append(thumbnail, text);
+
+      if (item.status === 'done') {
+        const link = document.createElement('a');
+        link.className = 'download';
+        link.href = item.url;
+        link.download = item.outName;
+        link.textContent = 'Download';
+        row.append(link);
+      }
+
+      return row;
+    }
+
+    function render() {
+      list.textContent = '';
+
+      for (const item of items) {
+        list.append(makeRow(item));
+      }
+
+      const busy = items.some((item) => item.status === 'working');
+      const anyDone = items.some((item) => item.status === 'done');
+
+      convertButton.disabled = busy || items.length === 0;
+      clearButton.disabled = busy || items.length === 0;
+      downloadButton.disabled = busy || !anyDone;
+    }
+
+    function addFiles(files) {
+      for (const file of files) {
+        const isImage = /^image\//.test(file.type) || /\.(heic|heif|jp2|avif|tiff?)$/i.test(file.name);
+        if (!isImage) continue;
+
+        items.push({
+          file: file,
+          preview: URL.createObjectURL(file),
+          status: 'waiting',
+          message: humanSize(file.size) + ' · waiting',
+          url: null,
+          outName: null,
+        });
+      }
+
+      render();
+    }
+
+    function buildSettings(item) {
+      const settings = new URLSearchParams();
+      settings.set('to', formatSelect.value);
+      settings.set('quality', quality.value);
+      settings.set('name', item.file.name);
+      settings.set('animation', animation.checked ? 'true' : 'false');
+
+      if (width.value) settings.set('width', width.value);
+      if (height.value) settings.set('height', height.value);
+
+      return settings;
+    }
+
+    function describe(item, blob, headers) {
+      const percent = Math.round((1 - blob.size / item.file.size) * 100);
+      const change = percent >= 0 ? '−' + percent + '%' : '+' + -percent + '%';
+      const pages = Number(headers.get('X-Image-Pages') || 1);
+
+      let text = humanSize(item.file.size) + ' → ' + humanSize(blob.size) + ' (' + change + ')';
+      text += ' · ' + headers.get('X-Image-Width') + '×' + headers.get('X-Image-Height');
+      if (pages > 1) text += ' · ' + pages + ' frames';
+
+      return text;
+    }
+
+    async function convertOne(item) {
+      item.status = 'working';
+      item.message = 'converting…';
+      render();
+
+      try {
+        const response = await fetch('/api/convert?' + buildSettings(item), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/octet-stream' },
+          body: item.file,
+        });
+
+        if (!response.ok) {
+          const failed = await response.json().catch(() => null);
+          throw new Error(failed ? failed.error : 'Conversion failed (' + response.status + ')');
+        }
+
+        const blob = await response.blob();
+        if (item.url) URL.revokeObjectURL(item.url);
+
+        item.url = URL.createObjectURL(blob);
+        item.outName = response.headers.get('X-Output-Name') || item.file.name;
+        item.status = 'done';
+        item.message = describe(item, blob, response.headers);
+      } catch (error) {
+        item.status = 'failed';
+        item.message = error.message;
+      }
+
+      render();
+    }
+
+    convertButton.addEventListener('click', async () => {
+      for (const item of items) {
+        await convertOne(item);
+      }
+    });
+
+    downloadButton.addEventListener('click', () => {
+      for (const item of items) {
+        if (item.status !== 'done') continue;
+
+        const link = document.createElement('a');
+        link.href = item.url;
+        link.download = item.outName;
+        link.click();
+      }
+    });
+
+    clearButton.addEventListener('click', () => {
+      for (const item of items) {
+        URL.revokeObjectURL(item.preview);
+        if (item.url) URL.revokeObjectURL(item.url);
+      }
+
+      items = [];
+      render();
+    });
+
+    quality.addEventListener('input', () => {
+      qualityValue.textContent = quality.value;
+    });
+
+    picker.addEventListener('change', () => {
+      addFiles(picker.files);
+      picker.value = '';
+    });
+
+    drop.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') picker.click();
+    });
+
+    drop.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      drop.classList.add('hover');
+    });
+
+    drop.addEventListener('dragleave', () => {
+      drop.classList.remove('hover');
+    });
+
+    drop.addEventListener('drop', (event) => {
+      event.preventDefault();
+      drop.classList.remove('hover');
+      addFiles(event.dataTransfer.files);
+    });
+
+    window.addEventListener('dragover', (event) => event.preventDefault());
+    window.addEventListener('drop', (event) => event.preventDefault());
+
+    render();
+  </script>
+</body>
+
+</html>
