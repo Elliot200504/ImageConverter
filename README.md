@@ -12,17 +12,8 @@ Allt sker på min egen dator. Ingen bild skickas till internet.
 
 ## Jag använder ett bibliotek
 
-Jag har inte skrivit koden som gör om själva bilden. Det är väldigt svårt.
-Istället använder jag ett färdigt bibliotek som heter **sharp**.
-
 Ett bibliotek är kod som någon annan redan har skrivit. Man laddar ner den och använder den.
 Sharp kan öppna en bild och spara den i ett annat format. Den kan också ändra storlek.
-
-Min kod gör resten:
-
-- Den frågar vad du vill ha (format, kvalitet, storlek).
-- Den skickar bilden till sharp.
-- Den sparar filen och visar hur det gick.
 
 ## Installera
 
